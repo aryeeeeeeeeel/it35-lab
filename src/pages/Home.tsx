@@ -1,25 +1,32 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/react';
-import ExploreContainer from '../components/ExploreContainer';
-import './Home.css';
+import { 
+  IonButton,
+  IonButtons,
+    IonContent, 
+    IonHeader, 
+    IonMenuButton, 
+    IonPage, 
+    IonTitle, 
+    IonToolbar 
+} from '@ionic/react';
 
 const Home: React.FC = () => {
   return (
     <IonPage>
       <IonHeader>
-        <IonToolbar>
-          <IonTitle>Blank</IonTitle>
-        </IonToolbar>
-      </IonHeader>
-      <IonContent fullscreen>
-        <IonHeader collapse="condense">
-          <IonToolbar>
-            <IonTitle size="large">Blank</IonTitle>
-          </IonToolbar>
-        </IonHeader>
-        <ExploreContainer />
-      </IonContent>
-    </IonPage>
-  );
-};
-
-export default Home;
+       <IonToolbar>
+        <IonButtons slot='start'>
+                <IonMenuButton ></IonMenuButton>
+              </IonButtons>
+              <IonTitle>Home</IonTitle>
+            </IonToolbar>
+           </IonHeader>
+          <IonContent fullscreen>
+          <IonButton routerLink="/it35-lab/app/home/details" expand="full">
+              Details
+          </IonButton>
+        </IonContent>
+      </IonPage>
+    );
+  };
+  
+  export default Home;
