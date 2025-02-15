@@ -1,25 +1,62 @@
 import { 
     IonButtons,
-      IonContent, 
-      IonHeader, 
-      IonMenuButton, 
-      IonPage, 
-      IonTitle, 
-      IonToolbar 
-  } from '@ionic/react';
-  
-  const Menu: React.FC = () => {
+    IonContent, 
+    IonHeader, 
+    IonIcon, 
+    IonItem, 
+    IonMenu, 
+    IonMenuButton, 
+    IonMenuToggle, 
+    IonPage, 
+    IonRouterOutlet, 
+    IonSplitPane, 
+    IonTitle, 
+    IonToolbar  
+} from '@ionic/react'
+import {homeOutline, rocketOutline} from 'ionicons/icons';
+import { Redirect, Route } from 'react-router';
+import Home from './Home';
+import About from './About';
+
+const Menu: React.FC = () => {
+    const path = [
+        {name:'Home', url: '/it35b-lab/app/Home', icon: homeOutline},
+        {name:'About', url: '/it35b-lab/app/About', icon: rocketOutline},
+    ]
+
     return (
-      <IonPage>
-        <IonHeader>
-          <IonToolbar>
-            <IonTitle>Menu</IonTitle>
-          </IonToolbar>
-        </IonHeader>
-        <IonContent fullscreen>
-        </IonContent>
-      </IonPage>
-    );
-  };
+        <IonPage>
+        <IonSplitPane contentId="main">
+            <IonMenu contentId="main">
+                <IonHeader>
+                    <IonToolbar>
+                        <IonTitle>
+                            Menu
+                        </IonTitle>
+                    </IonToolbar>
+                </IonHeader>
+                <IonContent>
+                    {path.map((item,index) =>(
+                        <IonMenuToggle key={index}>
+                            <IonItem routerLink={item.url} routerDirection="forward">
+                                <IonIcon icon={item.icon} slot="start"></IonIcon>
+                                {item.name}
+                            </IonItem>
+                        </IonMenuToggle>
+                    ))}
+                </IonContent>
+            </IonMenu>
+            
+            <IonRouterOutlet id="main">
+                <Route exact path="/it35b-lab/app/Home" component={Home} />
+                <Route exact path="/it35b-lab/app/About" component={About} />
+                <Route exact path="/it35b-lab/app">
+                    <Redirect to="/it35b-lab/app/Home"/>
+                </Route>
+            </IonRouterOutlet>
+        </IonSplitPane>
+    </IonPage>
+);
+};
   
   export default Menu;
