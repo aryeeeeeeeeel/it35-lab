@@ -1,10 +1,18 @@
+import kagawskie from "../img/kagawskie.jpg";
 import { 
-    IonButton,
-    IonButtons,
+      IonAvatar,
+      IonButton,
+      IonButtons,
+      IonCard,
       IonContent, 
       IonHeader, 
+      IonInput, 
+      IonInputPasswordToggle, 
+      IonItem, 
+      IonList, 
       IonMenuButton, 
       IonPage, 
+      IonText, 
       IonTitle, 
       IonToolbar, 
       useIonRouter
@@ -22,6 +30,21 @@ import {
             <IonTitle>Login</IonTitle>
           </IonToolbar>
         </IonHeader>
+        <IonAvatar style={{
+          margin: "auto",
+        }}><img
+            src={kagawskie}
+            alt="Kagawskie"
+          />
+      </IonAvatar>
+      <IonList>
+      <IonItem>
+        <IonInput label="Email:" value="arielsumantin69@gmail.com"></IonInput>
+      </IonItem>
+    <IonInput type="password" label="Password:" value="YouCan'tDoIt_JustGiveUp">
+      <IonInputPasswordToggle slot="end"></IonInputPasswordToggle>
+    </IonInput>
+    </IonList>
         <IonContent className='ion-padding'>
             <IonButton onClick={() => doLogin()} expand="full">
                 Login
