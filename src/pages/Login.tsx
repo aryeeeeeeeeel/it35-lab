@@ -23,6 +23,10 @@ import {
     const doLogin = () => {
         navigation.push('/it35b-lab/app','forward','replace');
     }
+    const doRegister = () => {
+      navigation.push('/it35b-lab/register','forward','replace');
+  }
+
     return (
       <IonPage>
         <IonHeader>
@@ -39,16 +43,19 @@ import {
       </IonAvatar>
       <IonList>
       <IonItem>
-        <IonInput label="Email:" value="arielsumantin69@gmail.com"></IonInput>
+        <IonInput type="email" label="Email:"  value=""></IonInput>
       </IonItem>
-    <IonInput type="password" label="Password:" value="YouCan'tDoIt_JustGiveUp">
+    <IonInput type="password" label="Password:" value="">
       <IonInputPasswordToggle slot="end"></IonInputPasswordToggle>
     </IonInput>
     </IonList>
         <IonContent className='ion-padding'>
-            <IonButton onClick={() => doLogin()} expand="full">
+            <IonButton onClick={() => doLogin()} fill="solid">
                 Login
             </IonButton>
+            <IonButton onClick={() => doRegister()} fill="outline">
+              Register
+              </IonButton>
         </IonContent>
       </IonPage>
     );
