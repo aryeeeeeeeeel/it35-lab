@@ -34,6 +34,10 @@ const Register: React.FC = () => {
   };
 
   const doRegister = () => {
+    if (username.trim() === '') {
+      alert('Username cannot be empty. Please enter a username.');
+      return;
+    }
     if (existingUsernames.includes(username)) {
       alert('Username is already taken. Choose another one.');
       return;
