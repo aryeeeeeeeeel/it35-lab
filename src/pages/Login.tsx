@@ -16,7 +16,7 @@ import { useState } from 'react';
 
 const Login: React.FC = () => {
   const navigation = useIonRouter();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
@@ -37,12 +37,12 @@ const Login: React.FC = () => {
           <p>Please login to continue</p>
 
           <IonItem className="input-field">
-            <IonLabel position="stacked">Email</IonLabel>
+            <IonLabel position="stacked">Username</IonLabel>
             <IonInput
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onIonInput={(e) => setEmail(e.detail.value!)}
+              type="text"
+              placeholder="Enter your username"
+              value={username}
+              onIonInput={(e) => setUsername(e.detail.value!)}
             />
           </IonItem>
 
