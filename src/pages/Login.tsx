@@ -69,7 +69,10 @@ const Login: React.FC = () => {
           </IonButton>
 
           <p className="register-link">
-            Don't have an account? <a href="it35b-lab/register">Sign up</a>
+            Don't have an account? 
+            <IonButton fill="clear" onClick={() => navigation.push('/it35b-lab/register')}>
+              Sign up
+            </IonButton>
           </p>
         </div>
       </IonContent>

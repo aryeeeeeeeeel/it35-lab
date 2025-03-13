@@ -131,7 +131,10 @@ const Register: React.FC = () => {
           </IonButton>
 
           <p className="login-link">
-            Already have an account? <a href="it35b-lab/">Login</a>
+            Already have an account?  
+            <IonButton fill="clear" onClick={() => navigation.push('/it35b-lab/')}>
+              Login
+            </IonButton>
           </p>
         </div>
       </IonContent>
