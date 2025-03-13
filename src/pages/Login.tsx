@@ -121,14 +121,11 @@ const Login: React.FC = () => {
           }
 
           .register-link {
-            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
             font-size: 14px;
-          }
-
-          .register-link a {
-            color: #3880ff;
-            text-decoration: none;
-            font-weight: bold;
           }
         `}
       </style>
