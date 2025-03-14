@@ -150,7 +150,7 @@ const Register: React.FC = () => {
             </IonButton>
 
             <p className="login-link">
-              Already have an account?
+              Already have an account? <br />
               <IonButton fill="clear" className="login-btn" onClick={() => navigation.push('/it35b-lab/')}>
                 LOGIN
               </IonButton>
@@ -165,24 +165,8 @@ const Register: React.FC = () => {
 
       <style>
         {`
-          .dark-theme {
-            --background: #121212;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-          }
-
-          .dark-toolbar {
-            --background: #121212;
-            --color: white;
-          }
-
           .register-wrapper {
-            width: 100%;
             display: flex;
-            align-items: center;
             justify-content: center;
             height: 100%;
           }
@@ -190,24 +174,19 @@ const Register: React.FC = () => {
           .register-container {
             width: 100%;
             max-width: 400px;
-            background: #1e1e1e;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
             text-align: center;
           }
 
           .input-field {
-            width: 100%;
             margin-bottom: 15px;
-            background: #2c2c2c;
             border-radius: 10px;
-            color: white;
           }
 
-          .input-field ion-input {
-            --padding-start: 12px;
-            width: 100%;
+          .login-btn {
+            border-radius: 10px;
+            background: #4CAF50;
+            color: white;
           }
 
           .eye-button {
