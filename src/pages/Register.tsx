@@ -9,7 +9,9 @@ import {
   IonTitle,
   IonToolbar,
   useIonRouter,
-  IonIcon
+  IonIcon,
+  IonToast,
+  IonLoading,
 } from '@ionic/react';
 import { eye, eyeOff } from 'ionicons/icons';
 import { useState } from 'react';
@@ -22,172 +24,194 @@ const Register: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const existingUsernames = ['admin'];
-
-  const validateEmail = (email: string) => {
-    return /^[\w.-]+@gmail\.com$/.test(email);
-  };
-
-  const validatePassword = (password: string) => {
-    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password);
-  };
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const doRegister = () => {
     if (username.trim() === '') {
-      alert('Username cannot be empty. Please enter a username.');
+      setErrorMessage('Username cannot be empty.');
       return;
     }
+    const existingUsernames = ['admin'];
     if (existingUsernames.includes(username)) {
-      alert('Username is already taken. Choose another one.');
+      setErrorMessage('Username is already taken. Choose another one.');
       return;
     }
-    if (!validateEmail(email)) {
-      alert('Invalid email address. Please enter a valid Gmail address ending in @gmail.com.');
+    if (!email.endsWith('@nbsc.edu.ph')) {
+      setErrorMessage('Use an @nbsc.edu.ph email.');
       return;
     }
-    if (!validatePassword(password)) {
-      alert('Password must be at least 8 characters long, include one uppercase letter, one lowercase letter, one number, and one special character.');
+
+    const validatePassword = (password: string) => {
+      const minLength = 8;
+      const hasUpperCase = /[A-Z]/.test(password);
+      const hasLowerCase = /[a-z]/.test(password);
+      const hasNumber = /[0-9]/.test(password);
+      const hasSpecialChar = /[!@#$%^&*()_,.?":{}|<>]/.test(password);
+
+      if (password.trim() === '') {
+        return 'Password cannot be empty.';
+      }
+      if (password.length < minLength) {
+        return 'Password must be at least 8 characters long.';
+      }
+      if (!hasUpperCase) {
+        return 'Password must contain at least one uppercase letter.';
+      }
+      if (!hasLowerCase) {
+        return 'Password must contain at least one lowercase letter.';
+      }
+      if (!hasNumber) {
+        return 'Password must contain at least one number.';
+      }
+      if (!hasSpecialChar) {
+        return 'Password must contain at least one special character.';
+      }
+      return '';
+    };
+    if (password.trim() === '') {
+      setErrorMessage('Password is required.');
+      return;
+    }
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setErrorMessage(passwordError);
       return;
     }
     if (password !== confirmPassword) {
-      alert('Passwords do not match!');
+      setErrorMessage('Passwords do not match!');
       return;
     }
-    alert('Registration successful! Please login with your new account.');
-    navigation.push('/it35b-lab/', 'forward', 'replace');
+
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setSuccessMessage('Registration successful!');
+      setTimeout(() => {
+        setSuccessMessage('');
+        navigation.push('/it35b-lab/', 'root', 'replace');
+      }, 1500);
+
+    }, 1500);
   };
 
   return (
     <IonPage>
       <IonHeader>
-        <IonToolbar>
+        <IonToolbar className="dark-toolbar">
           <IonTitle>Register</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent className="ion-padding" fullscreen>
-        <div className="register-container">
-          <h2>Create an Account</h2>
-          <p>Fill in the details below</p>
+      <IonContent className="ion-padding dark-theme" fullscreen>
+        <div className="register-wrapper">
+          <div className="register-container">
+            <h2>Create an Account</h2>
+            <p>Fill in the details below</p>
 
-          <IonItem className="input-field">
-            <IonLabel position="stacked">Username</IonLabel>
-            <IonInput
-              type="text"
-              placeholder="Enter your username"
-              value={username}
-              onIonInput={(e) => setUsername(e.detail.value!)}
-            />
-          </IonItem>
+            <IonItem className="input-field">
+              <IonLabel position="stacked">Username</IonLabel>
+              <IonInput value={username} onIonInput={(e) => setUsername(e.detail.value!)} placeholder="Enter your username" />
+            </IonItem>
 
-          <IonItem className="input-field">
-            <IonLabel position="stacked">Email</IonLabel>
-            <IonInput
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onIonInput={(e) => setEmail(e.detail.value!)}
-            />
-          </IonItem>
+            <IonItem className="input-field">
+              <IonLabel position="stacked">Email</IonLabel>
+              <IonInput type="email" value={email} onIonInput={(e) => setEmail(e.detail.value!)} placeholder="Enter your email" />
+            </IonItem>
 
-          <IonItem className="input-field">
-            <IonLabel position="stacked">Password</IonLabel>
-            <IonInput
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Enter your password"
-              value={password}
-              onIonInput={(e) => setPassword(e.detail.value!)}
-            />
-            <IonButton
-              fill="clear"
-              slot="end"
-              onClick={() => setShowPassword(!showPassword)}
-              className="password-toggle"
-            >
-              <IonIcon icon={showPassword ? eyeOff : eye} />
+            <IonItem className="input-field">
+              <IonLabel position="stacked">Password</IonLabel>
+              <IonInput
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onIonInput={(e) => setPassword(e.detail.value!)}
+                placeholder="Enter your password"
+              />
+              <IonButton fill="clear" slot="end" className="eye-button" onClick={() => setShowPassword(!showPassword)}>
+                <IonIcon icon={showPassword ? eyeOff : eye} />
+              </IonButton>
+            </IonItem>
+
+            <IonItem className="input-field">
+              <IonLabel position="stacked">Confirm Password</IonLabel>
+              <IonInput
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={confirmPassword}
+                onIonInput={(e) => setConfirmPassword(e.detail.value!)}
+                placeholder="Confirm your password"
+              />
+              <IonButton fill="clear" slot="end" className="eye-button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                <IonIcon icon={showConfirmPassword ? eyeOff : eye} />
+              </IonButton>
+            </IonItem>
+
+            <IonButton expand="full" className="register-btn" onClick={doRegister}>
+              REGISTER
             </IonButton>
-          </IonItem>
 
-          <IonItem className="input-field">
-            <IonLabel position="stacked">Confirm Password</IonLabel>
-            <IonInput
-              type={showConfirmPassword ? 'text' : 'password'}
-              placeholder="Confirm your password"
-              value={confirmPassword}
-              onIonInput={(e) => setConfirmPassword(e.detail.value!)}
-            />
-            <IonButton
-              fill="clear"
-              slot="end"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="password-toggle"
-            >
-              <IonIcon icon={showConfirmPassword ? eyeOff : eye} />
-            </IonButton>
-          </IonItem>
-
-          <IonButton expand="full" className="register-btn" onClick={doRegister}>
-            Register
-          </IonButton>
-
-          <p className="login-link">
-            Already have an account?  
-            <IonButton fill="clear" onClick={() => navigation.push('/it35b-lab/')}>
-              Login
-            </IonButton>
-          </p>
+            <p className="login-link">
+              Already have an account?
+              <IonButton fill="clear" className="login-btn" onClick={() => navigation.push('/it35b-lab/')}>
+                LOGIN
+              </IonButton>
+            </p>
+          </div>
         </div>
+
+        <IonToast isOpen={!!errorMessage} message={errorMessage} color="danger" duration={2000} position="top" onDidDismiss={() => setErrorMessage('')} />
+        <IonToast isOpen={!!successMessage} message={successMessage} color="success" duration={2000} position="top" onDidDismiss={() => setSuccessMessage('')} />
+        <IonLoading isOpen={loading} message="Registering..." />
       </IonContent>
 
       <style>
         {`
-          .register-container {
+          .dark-theme {
+            --background: #121212;
+            color: white;
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+          }
+
+          .dark-toolbar {
+            --background: #121212;
+            --color: white;
+          }
+
+          .register-wrapper {
+            width: 100%;
+            display: flex;
             align-items: center;
             justify-content: center;
             height: 100%;
+          }
+
+          .register-container {
+            width: 100%;
+            max-width: 400px;
+            background: #1e1e1e;
             padding: 20px;
-          }
-
-          .register-container h2 {
-            font-size: 24px;
-            margin-bottom: 10px;
-          }
-
-          .register-container p {
-            color: gray;
-            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+            text-align: center;
           }
 
           .input-field {
             width: 100%;
-            max-width: 400px;
             margin-bottom: 15px;
+            background: #2c2c2c;
             border-radius: 10px;
+            color: white;
           }
 
-          .password-toggle {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 10;
-          }
-
-          .register-btn {
+          .input-field ion-input {
+            --padding-start: 12px;
             width: 100%;
-            max-width: 400px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
           }
 
-          .login-link {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 5px;
-            font-size: 14px;
+          .eye-button {
+            height: 100%;
           }
         `}
       </style>
