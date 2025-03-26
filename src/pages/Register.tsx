@@ -15,9 +15,12 @@ import {
 } from '@ionic/react';
 import { eye, eyeOff } from 'ionicons/icons';
 import { useState } from 'react';
+import { supabase } from '../utils/supabaseClient';
+import bcrypt from 'bcryptjs';
 
 const Register: React.FC = () => {
   const navigation = useIonRouter();
+  const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,50 +31,39 @@ const Register: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const doRegister = () => {
+  const validatePassword = (password: string) => {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*()_,.?":{}|<>]/.test(password);
+
+    if (password.trim() === '') return 'Password cannot be empty.';
+    if (password.length < minLength) return 'Password must be at least 8 characters.';
+    if (!hasUpperCase) return 'Include at least one uppercase letter.';
+    if (!hasLowerCase) return 'Include at least one lowercase letter.';
+    if (!hasNumber) return 'Include at least one number.';
+    if (!hasSpecialChar) return 'Include at least one special character.';
+    return '';
+  };
+
+  const doRegister = async () => {
+    console.log('Registering...');
+
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    if (name.trim() === '') {
+      setErrorMessage('Name cannot be empty.');
+      return;
+    }
+
     if (username.trim() === '') {
       setErrorMessage('Username cannot be empty.');
       return;
     }
-    const existingUsernames = ['admin'];
-    if (existingUsernames.includes(username)) {
-      setErrorMessage('Username is already taken. Choose another one.');
-      return;
-    }
     if (!email.endsWith('@nbsc.edu.ph')) {
       setErrorMessage('Use an @nbsc.edu.ph email.');
-      return;
-    }
-
-    const validatePassword = (password: string) => {
-      const minLength = 8;
-      const hasUpperCase = /[A-Z]/.test(password);
-      const hasLowerCase = /[a-z]/.test(password);
-      const hasNumber = /[0-9]/.test(password);
-      const hasSpecialChar = /[!@#$%^&*()_,.?":{}|<>]/.test(password);
-
-      if (password.trim() === '') {
-        return 'Password cannot be empty.';
-      }
-      if (password.length < minLength) {
-        return 'Password must be at least 8 characters long.';
-      }
-      if (!hasUpperCase) {
-        return 'Password must contain at least one uppercase letter.';
-      }
-      if (!hasLowerCase) {
-        return 'Password must contain at least one lowercase letter.';
-      }
-      if (!hasNumber) {
-        return 'Password must contain at least one number.';
-      }
-      if (!hasSpecialChar) {
-        return 'Password must contain at least one special character.';
-      }
-      return '';
-    };
-    if (password.trim() === '') {
-      setErrorMessage('Password is required.');
       return;
     }
     const passwordError = validatePassword(password);
@@ -84,16 +76,53 @@ const Register: React.FC = () => {
       return;
     }
 
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setSuccessMessage('Registration successful!');
-      setTimeout(() => {
-        setSuccessMessage('');
-        navigation.push('/it35b-lab/', 'root', 'replace');
-      }, 1500);
+    if (!email || !password) {
+      setErrorMessage('Fields cannot be empty');
+      return;
+    }
 
-    }, 1500);
+    try {
+      setLoading(true);
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      console.log('Supabase response:', data, error);
+
+      if (error) {
+        setErrorMessage(error.message);
+        setLoading(false);
+        return;
+      }
+
+      if (!data.user) {
+        setErrorMessage('Registration failed. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert([
+          { id: data.user.id, name, username, email, password_hash: hashedPassword }
+        ]);
+
+      if (insertError) {
+        setErrorMessage(insertError.message);
+        setLoading(false);
+        return;
+      }
+
+      setSuccessMessage('Check your email to verify!');
+      setTimeout(() => navigation.push('/it35b-lab/'), 2000);
+    } catch (err) {
+      console.error('Unexpected Error:', err);
+      setErrorMessage('Something went wrong.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -108,6 +137,12 @@ const Register: React.FC = () => {
           <div className="register-container">
             <h2>Create an Account</h2>
             <p>Fill in the details below</p>
+
+            <IonItem className="input-field">
+              <IonLabel position="stacked">Full Name</IonLabel>
+              <IonInput type="text" value={name} onIonInput={(e) => setName(e.detail.value!)} placeholder="Enter your full name" />
+            </IonItem>
+
 
             <IonItem className="input-field">
               <IonLabel position="stacked">Username</IonLabel>
