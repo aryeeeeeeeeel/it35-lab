@@ -15,25 +15,49 @@ import {
 } from '@ionic/react';
 import { eye, eyeOff } from 'ionicons/icons';
 import { useState } from 'react';
+import { supabase } from '../utils/supabaseClient';
 
 const Login: React.FC = () => {
   const navigation = useIonRouter();
+  const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const doLogin = () => {
-    if (username.trim() === '' || password.trim() === '') {
+  const doLogin = async () => {
+    setShowToast(false);
+    setLoading(true);
+
+    if (email.trim() === '' || password.trim() === '') {
       setShowToast(true);
+      setLoading(false);
       return;
     }
-    setLoading(true);
-    setTimeout(() => {
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data.user) {
+        throw new Error('Login failed. Please try again.');
+      }
+
+      console.log('Login successful:', data);
       setLoading(false);
       navigation.push('/it35b-lab/app', 'forward', 'replace');
-    }, 1500);
+    } catch (err) {
+      setLoading(false);
+      console.error('Login error:', (err as Error).message);
+      setShowToast(true);
+    }
   };
 
   return (
@@ -50,8 +74,8 @@ const Login: React.FC = () => {
             <p>Please login to continue</p>
 
             <IonItem className="input-field">
-              <IonLabel position="stacked">Username</IonLabel>
-              <IonInput type="text" value={username} onIonInput={(e) => setUsername(e.detail.value!)} placeholder="Enter your username" />
+              <IonLabel position="stacked">Email</IonLabel>
+              <IonInput type="email" value={email} onIonInput={(e) => setEmail(e.detail.value!)} placeholder="Enter your email" />
             </IonItem>
 
             <IonItem className="input-field">
