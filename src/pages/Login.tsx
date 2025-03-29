@@ -12,6 +12,7 @@ import {
   IonToast,
   useIonRouter,
   IonLoading,
+  IonModal,
 } from '@ionic/react';
 import { eye, eyeOff } from 'ionicons/icons';
 import { useState } from 'react';
@@ -25,6 +26,9 @@ const Login: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showOTPModal, setShowOTPModal] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [userId, setUserId] = useState('');
 
   // 🔹 Fetch user ID from email
   const getUserByEmail = async (email: string) => {
@@ -102,6 +106,46 @@ const Login: React.FC = () => {
       .eq('user_id', userId);
   };
 
+  // 🔹 OTP Handling
+  const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+  const storeOTP = async (userId: string) => {
+    const otpCode = generateOTP();
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 5); // 5-minute expiration
+
+    await supabase.from('otp_codes').insert([{ user_id: userId, otp: otpCode, expires_at: expiresAt.toISOString() }]);
+    return otpCode;
+  };
+
+  const verifyOTP = async () => {
+    if (!otp) {
+      setToastMessage("Please enter OTP.");
+      setShowToast(true);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('otp_codes')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('otp', otp)
+      .gte('expires_at', new Date().toISOString())
+      .single();
+
+    if (error || !data) {
+      setToastMessage("Invalid or expired OTP.");
+      setShowToast(true);
+      return;
+    }
+
+    // Delete OTP after successful verification
+    await supabase.from('otp_codes').delete().eq('id', data.id);
+
+    // Navigate to the app
+    navigation.push('/it35b-lab/app', 'forward', 'replace');
+  };
+
   // 🔹 Login function
   const doLogin = async () => {
     setShowToast(false);
@@ -161,14 +205,16 @@ const Login: React.FC = () => {
       // Reset failed login attempts on success
       await resetFailedAttempts(userId);
 
-      console.log('Login successful:', data);
-      setLoading(false);
-      navigation.push('/it35b-lab/app', 'forward', 'replace');
+      setUserId(userId);
+      const otpCode = await storeOTP(userId);
+      console.log("Generated OTP:", otpCode);
+
+      setShowOTPModal(true);
     } catch (err) {
       setToastMessage((err as Error).message);
       setShowToast(true);
+    } finally {
       setLoading(false);
-      console.error('Login error:', err);
     }
   };
 
@@ -216,6 +262,23 @@ const Login: React.FC = () => {
             </p>
           </div>
         </div>
+
+        {/* OTP Modal */}
+        <IonModal isOpen={showOTPModal}>
+          <IonHeader>
+            <IonToolbar>
+              <IonTitle>Enter OTP</IonTitle>
+            </IonToolbar>
+          </IonHeader>
+          <IonContent className="ion-padding">
+            <p>We sent a One-Time Password to your email.</p>
+            <IonItem>
+              <IonLabel position="stacked">OTP</IonLabel>
+              <IonInput type="text" value={otp} onIonInput={(e) => setOtp(e.detail.value!)} placeholder="Enter OTP" />
+            </IonItem>
+            <IonButton expand="full" onClick={verifyOTP}>Verify OTP</IonButton>
+          </IonContent>
+        </IonModal>
 
         <IonToast isOpen={showToast} message={toastMessage} color="danger" duration={2000} position="top" onDidDismiss={() => setShowToast(false)} />
         <IonLoading isOpen={loading} message="Logging in..." duration={1500} />
