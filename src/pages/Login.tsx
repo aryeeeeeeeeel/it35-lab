@@ -30,7 +30,6 @@ const Login: React.FC = () => {
   const [otp, setOtp] = useState('');
   const [userId, setUserId] = useState('');
 
-  // 🔹 Fetch user ID from email
   const getUserByEmail = async (email: string) => {
     const { data, error } = await supabase
       .from('users')
@@ -63,7 +62,6 @@ const Login: React.FC = () => {
       .eq('user_id', userId);
   };
 
-  // 🔹 Check if account is locked
   const isAccountLocked = async (userId: string) => {
     const failedData = await getFailedLoginData(userId);
 
@@ -87,8 +85,8 @@ const Login: React.FC = () => {
 
     attempts += 1;
 
-    if (attempts === 3) lockDuration = 5; // Lock for 5 minutes after 3 failed attempts
-    if (attempts === 6) lockDuration = 10; // Lock for 10 minutes after 6 failed attempts
+    if (attempts === 3) lockDuration = 5;
+    if (attempts === 6) lockDuration = 10;
 
     await supabase
       .from('failed_logins')
@@ -106,13 +104,12 @@ const Login: React.FC = () => {
       .eq('user_id', userId);
   };
 
-  // 🔹 OTP Handling
   const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
   const storeOTP = async (userId: string) => {
     const otpCode = generateOTP();
     const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 5); // 5-minute expiration
+    expiresAt.setMinutes(expiresAt.getMinutes() + 5);
 
     await supabase.from('otp_codes').insert([{ user_id: userId, otp: otpCode, expires_at: expiresAt.toISOString() }]);
     return otpCode;
@@ -139,14 +136,11 @@ const Login: React.FC = () => {
       return;
     }
 
-    // Delete OTP after successful verification
     await supabase.from('otp_codes').delete().eq('id', data.id);
 
-    // Navigate to the app
     navigation.push('/it35b-lab/app', 'forward', 'replace');
   };
 
-  // 🔹 Login function
   const doLogin = async () => {
     setShowToast(false);
     setLoading(true);
@@ -158,22 +152,20 @@ const Login: React.FC = () => {
       return;
     }
 
-    // 🔹 Check if email ends with @nbsc.edu.ph
     if (!email.endsWith('@nbsc.edu.ph')) {
-      setLoading(true); // Show loading first
+      setLoading(true);
 
       setTimeout(() => {
-        setLoading(false); // Stop loading
+        setLoading(false);
         setToastMessage('Invalid email or password. Please try again.');
         setShowToast(true);
-      }, 1000); // Delay to ensure loading completes before showing toast
+      }, 1000);
 
       return;
     }
 
 
     try {
-      // Get user ID
       const userId = await getUserByEmail(email);
       if (!userId) {
         setToastMessage('User not found. Please register.');
@@ -182,7 +174,6 @@ const Login: React.FC = () => {
         return;
       }
 
-      // Check if account is locked
       const lockMessage = await isAccountLocked(userId);
       if (lockMessage) {
         setToastMessage(lockMessage);
@@ -191,18 +182,16 @@ const Login: React.FC = () => {
         return;
       }
 
-      // Attempt login
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error || !data.user) {
-        await trackFailedLogin(userId); // Track failed attempt
+        await trackFailedLogin(userId);
         setToastMessage('Invalid email or password. Please try again.');
         setShowToast(true);
         setLoading(false);
         return;
       }
 
-      // Reset failed login attempts on success
       await resetFailedAttempts(userId);
 
       setUserId(userId);
@@ -263,7 +252,6 @@ const Login: React.FC = () => {
           </div>
         </div>
 
-        {/* OTP Modal */}
         <IonModal isOpen={showOTPModal}>
           <IonHeader>
             <IonToolbar>
