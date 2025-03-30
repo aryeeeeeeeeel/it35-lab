@@ -14,6 +14,8 @@ import {
   IonLoading,
 } from '@ionic/react';
 import { eye, eyeOff } from 'ionicons/icons';
+import { IonAlert } from '@ionic/react';
+import { useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import bcrypt from 'bcryptjs';
@@ -30,6 +32,17 @@ const Register: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  useIonViewWillEnter(() => {
+    setName('');
+    setUsername('');
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setErrorMessage('');
+    setSuccessMessage('');
+  });
 
   const validatePassword = (password: string) => {
     const minLength = 8;
@@ -47,7 +60,13 @@ const Register: React.FC = () => {
     return '';
   };
 
+  const confirmRegister = () => {
+    setShowConfirm(true);
+  };
+
   const doRegister = async () => {
+    setShowConfirm(false);
+
     console.log('Registering...');
 
     setErrorMessage('');
@@ -87,6 +106,9 @@ const Register: React.FC = () => {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: { full_name: name }
+        }
       });
 
       console.log('Supabase response:', data, error);
@@ -180,9 +202,10 @@ const Register: React.FC = () => {
               </IonButton>
             </IonItem>
 
-            <IonButton expand="full" className="register-btn" onClick={doRegister}>
+            <IonButton expand="full" className="register-btn" onClick={confirmRegister}>
               REGISTER
             </IonButton>
+
 
             <p className="login-link">
               Already have an account? <br />
@@ -196,6 +219,22 @@ const Register: React.FC = () => {
         <IonToast isOpen={!!errorMessage} message={errorMessage} color="danger" duration={2000} position="top" onDidDismiss={() => setErrorMessage('')} />
         <IonToast isOpen={!!successMessage} message={successMessage} color="success" duration={2000} position="top" onDidDismiss={() => setSuccessMessage('')} />
         <IonLoading isOpen={loading} message="Registering..." />
+        <IonAlert
+          isOpen={showConfirm}
+          onDidDismiss={() => setShowConfirm(false)}
+          header="Confirm Registration"
+          message={`Are you sure you want to create an account with email: <strong>${email}</strong>?`}
+          buttons={[
+            {
+              text: 'Cancel',
+              role: 'cancel',
+            },
+            {
+              text: 'Yes, Register',
+              handler: doRegister,
+            }
+          ]}
+        />
       </IonContent>
 
       <style>
@@ -203,7 +242,6 @@ const Register: React.FC = () => {
           .register-wrapper {
             display: flex;
             justify-content: center;
-            height: 100%;
           }
 
           .register-container {
