@@ -12,6 +12,7 @@ import {
   IonIcon,
   IonToast,
   IonLoading,
+  IonModal,
 } from '@ionic/react';
 import { eye, eyeOff } from 'ionicons/icons';
 import { IonAlert } from '@ionic/react';
@@ -216,25 +217,31 @@ const Register: React.FC = () => {
           </div>
         </div>
 
+        <IonModal
+          isOpen={showConfirm}
+          onDidDismiss={() => setShowConfirm(false)}
+          className="custom-modal"
+        >
+          <div className="modal-content">
+            <h2>Confirm Registration</h2>
+            <p>Are you sure you want to register with:</p>
+            <p className="email-highlight">{email}</p>
+
+            <div className="modal-buttons">
+              <IonButton fill="outline" onClick={() => setShowConfirm(false)}>
+                Cancel
+              </IonButton>
+              <IonButton color="success" onClick={doRegister}>
+                Yes, Register
+              </IonButton>
+            </div>
+          </div>
+        </IonModal>
+
+
         <IonToast isOpen={!!errorMessage} message={errorMessage} color="danger" duration={2000} position="top" onDidDismiss={() => setErrorMessage('')} />
         <IonToast isOpen={!!successMessage} message={successMessage} color="success" duration={2000} position="top" onDidDismiss={() => setSuccessMessage('')} />
         <IonLoading isOpen={loading} message="Registering..." />
-        <IonAlert
-          isOpen={showConfirm}
-          onDidDismiss={() => setShowConfirm(false)}
-          header="Confirm Registration"
-          message={`Are you sure you want to create an account with email: <strong>${email}</strong>?`}
-          buttons={[
-            {
-              text: 'Cancel',
-              role: 'cancel',
-            },
-            {
-              text: 'Yes, Register',
-              handler: doRegister,
-            }
-          ]}
-        />
       </IonContent>
 
       <style>
@@ -264,6 +271,42 @@ const Register: React.FC = () => {
 
           .eye-button {
             height: 100%;
+          }
+
+          .modal-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+          }
+
+          .modal-content {
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+          }
+
+          .email-highlight {
+            font-weight: bold;
+            color:rgb(255, 255, 255);
+            margin-bottom: 20px;
+          }
+
+          .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+          }
+
+          .custom-modal {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            --width: auto;
+            --height: auto;
+            --max-width: 350px;
+            --max-height: 400px;
           }
         `}
       </style>

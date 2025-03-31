@@ -16,6 +16,7 @@ import {
 } from '@ionic/react';
 import { eye, eyeOff } from 'ionicons/icons';
 import { useState } from 'react';
+import { useIonViewWillEnter } from '@ionic/react';
 import { supabase } from '../utils/supabaseClient';
 
 const Login: React.FC = () => {
@@ -29,6 +30,12 @@ const Login: React.FC = () => {
   const [showOTPModal, setShowOTPModal] = useState(false);
   const [otp, setOtp] = useState('');
   const [userId, setUserId] = useState('');
+
+  useIonViewWillEnter(() => {
+    setEmail(sessionStorage.getItem('email') || '');
+    setPassword(sessionStorage.getItem('password') || '');
+  });
+
 
   const getUserByEmail = async (email: string) => {
     const { data, error } = await supabase
@@ -232,6 +239,7 @@ const Login: React.FC = () => {
 
       console.log("OTP sent to email.");
 
+      setOtp('');
       setShowOTPModal(true);
     } catch (err) {
       setToastMessage((err as Error).message);
@@ -286,23 +294,29 @@ const Login: React.FC = () => {
           </div>
         </div>
 
-        <IonModal isOpen={showOTPModal}>
-          <IonHeader>
-            <IonToolbar>
-              <IonTitle>Enter OTP</IonTitle>
-            </IonToolbar>
-          </IonHeader>
-          <IonContent className="ion-padding">
+        <IonModal isOpen={showOTPModal} className="custom-modal" backdropDismiss={false}>
+          <div className="otp-container">
+            <h2>Enter OTP</h2>
             <p>We sent a One-Time Password to your email.</p>
-            <IonItem>
+
+            <IonItem className="input-field">
               <IonLabel position="stacked">OTP</IonLabel>
-              <IonInput type="text" value={otp} onIonInput={(e) => setOtp(e.detail.value!)} placeholder="Enter OTP" />
+              <IonInput
+                type="text"
+                value={otp}
+                onIonInput={(e) => setOtp(e.detail.value!)}
+                placeholder="Enter OTP"
+              />
             </IonItem>
-            <IonButton expand="full" onClick={verifyOTP}>Verify OTP</IonButton>
-          </IonContent>
+
+            <IonButton expand="full" className="verify-btn" onClick={verifyOTP}>
+              Verify OTP
+            </IonButton>
+          </div>
         </IonModal>
 
-        <IonToast isOpen={showToast} message={toastMessage} color="danger" duration={2000} position="top" onDidDismiss={() => setShowToast(false)} />
+
+        <IonToast isOpen={showToast} message={toastMessage} color={toastMessage.includes("✅") ? "success" : "danger"}  duration={2000} position="top" onDidDismiss={() => setShowToast(false)} />
         <IonLoading isOpen={loading} message="Logging in..." duration={1500} />
       </IonContent>
 
@@ -345,6 +359,33 @@ const Login: React.FC = () => {
             text-align: center;
             margin-top: 10px;
           }
+
+          .custom-modal {
+            --width: 100%;
+            --height: auto;
+            --max-width: 400px; /* Match login container */
+            --border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .otp-container {
+            width: 100%;
+            max-width: 400px; /* Same as login container */
+            padding: 20px;
+            text-align: center;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+          }
+            
+          .verify-btn {
+            margin-top: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 10px;
+          }
+
         `}
       </style>
     </IonPage>
