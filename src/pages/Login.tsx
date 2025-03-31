@@ -53,66 +53,76 @@ const Login: React.FC = () => {
   };
 
   const lockAccount = async (userId: string, lockDuration: number) => {
-    const lockTime = new Date();
-    lockTime.setMinutes(lockTime.getMinutes() + lockDuration);
+    const nowUTC = new Date();
+    nowUTC.setMinutes(nowUTC.getMinutes() + lockDuration);
 
     await supabase
       .from('failed_logins')
-      .update({ locked_until: lockTime.toISOString() })
+      .update({ locked_until: nowUTC.toISOString() })
       .eq('user_id', userId);
   };
 
   const isAccountLocked = async (userId: string) => {
-    const failedData = await getFailedLoginData(userId);
+    const { data, error } = await supabase
+      .from('failed_logins')
+      .select('locked_until')
+      .eq('user_id', userId)
+      .single();
 
-    if (!failedData || !failedData.locked_until) return false;
+    if (error || !data || !data.locked_until) return false;
 
-    const now = new Date();
-    const lockedUntil = new Date(failedData.locked_until);
+    const lockedUntilUTC = new Date(data.locked_until);
+    const nowUTC = new Date();
 
-    console.log("Current Time:", now);
-    console.log("Locked Until:", lockedUntil);
-
-    return now.getTime() < lockedUntil.getTime()
-      ? `Your account is locked until ${lockedUntil.toLocaleTimeString()}.`
+    return nowUTC < lockedUntilUTC
+      ? `Your account is locked until ${lockedUntilUTC.toLocaleString('en-PH', { timeZone: 'Asia/Manila' })}.`
       : false;
   };
 
   const trackFailedLogin = async (userId: string) => {
-    const failedData = await getFailedLoginData(userId);
+    const { data: failedData, error } = await supabase
+      .from('failed_logins')
+      .select('failed_attempts, locked_until')
+      .eq('user_id', userId)
+      .single();
+
     let attempts = failedData?.failed_attempts || 0;
     let lockDuration = 0;
+    let errorMessage = 'Invalid email or password. Please try again.';
 
     attempts += 1;
 
-    if (attempts === 3) lockDuration = 5;
-    if (attempts === 6) lockDuration = 10;
+    if (attempts === 3) {
+      lockDuration = 5;
+      errorMessage = "Too many failed attempts. Your account is locked for 5 minutes.";
+    } else if (attempts === 5) {
+      lockDuration = 10;
+      errorMessage = "Too many failed attempts. Your account is locked for 10 minutes.";
+    }
+
+    let lockedUntil = null;
+    if (lockDuration > 0) {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + lockDuration);
+      lockedUntil = now.toISOString();
+    }
 
     await supabase
       .from('failed_logins')
-      .upsert([{ user_id: userId, failed_attempts: attempts, last_attempt: new Date().toISOString() }]);
+      .upsert([
+        { user_id: userId, failed_attempts: attempts, last_attempt: new Date().toISOString(), locked_until: lockedUntil }
+      ]);
 
-    if (lockDuration > 0) {
-      await lockAccount(userId, lockDuration);
-    }
+    setToastMessage(errorMessage);
+    setShowToast(true);
   };
+
 
   const resetFailedAttempts = async (userId: string) => {
     await supabase
       .from('failed_logins')
       .update({ failed_attempts: 0, locked_until: null })
       .eq('user_id', userId);
-  };
-
-  const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
-
-  const storeOTP = async (userId: string) => {
-    const otpCode = generateOTP();
-    const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 5);
-
-    await supabase.from('otp_codes').insert([{ user_id: userId, otp: otpCode, expires_at: expiresAt.toISOString() }]);
-    return otpCode;
   };
 
   const verifyOTP = async () => {
@@ -137,8 +147,11 @@ const Login: React.FC = () => {
     }
 
     await supabase.from('otp_codes').delete().eq('id', data.id);
+    setToastMessage("✅ Login successful!");
+    setShowToast(true);
+    setShowOTPModal(false);
 
-    navigation.push('/it35b-lab/app', 'forward', 'replace');
+    navigation.push("/it35b-lab/app");
   };
 
   const doLogin = async () => {
@@ -153,8 +166,6 @@ const Login: React.FC = () => {
     }
 
     if (!email.endsWith('@nbsc.edu.ph')) {
-      setLoading(true);
-
       setTimeout(() => {
         setLoading(false);
         setToastMessage('Invalid email or password. Please try again.');
@@ -164,39 +175,62 @@ const Login: React.FC = () => {
       return;
     }
 
-
     try {
-      const userId = await getUserByEmail(email);
-      if (!userId) {
+      const foundUserId = await getUserByEmail(email);
+      if (!foundUserId) {
         setToastMessage('User not found. Please register.');
         setShowToast(true);
         setLoading(false);
         return;
       }
 
-      const lockMessage = await isAccountLocked(userId);
-      if (lockMessage) {
-        setToastMessage(lockMessage);
-        setShowToast(true);
-        setLoading(false);
-        return;
+      setUserId(foundUserId);
+
+      const { data: lockData, error: lockError } = await supabase
+        .from('failed_logins')
+        .select('locked_until')
+        .eq('user_id', foundUserId)
+        .single();
+
+      if (lockData?.locked_until) {
+        const lockedUntil = new Date(lockData.locked_until);
+        const now = new Date();
+
+        if (now < lockedUntil) {
+          setToastMessage('Your account is locked. Try again later.');
+          setShowToast(true);
+          setLoading(false);
+          return;
+        }
       }
 
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error || !data.user) {
-        await trackFailedLogin(userId);
+        await trackFailedLogin(foundUserId);
         setToastMessage('Invalid email or password. Please try again.');
         setShowToast(true);
         setLoading(false);
         return;
       }
 
-      await resetFailedAttempts(userId);
+      await resetFailedAttempts(foundUserId);
 
-      setUserId(userId);
-      const otpCode = await storeOTP(userId);
-      console.log("Generated OTP:", otpCode);
+      const response = await fetch("http://localhost:5000/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const result = await response.json();
+      if (!result.success) {
+        setToastMessage(result.error || "Failed to send OTP.");
+        setShowToast(true);
+        setLoading(false);
+        return;
+      }
+
+      console.log("OTP sent to email.");
 
       setShowOTPModal(true);
     } catch (err) {
