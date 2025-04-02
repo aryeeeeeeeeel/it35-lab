@@ -30,6 +30,11 @@ const Login: React.FC = () => {
   const [showOTPModal, setShowOTPModal] = useState(false);
   const [otp, setOtp] = useState('');
   const [userId, setUserId] = useState('');
+  const [showPasswordResetModal, setShowPasswordResetModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [showOtpInput, setShowOtpInput] = useState(false);
 
   useIonViewWillEnter(() => {
     setEmail(sessionStorage.getItem('email') || '');
@@ -158,7 +163,7 @@ const Login: React.FC = () => {
     setShowToast(true);
     setShowOTPModal(false);
 
-    navigation.push("/it35b-lab/app");
+    navigation.push("/ias/app");
   };
 
   const doLogin = async () => {
@@ -284,10 +289,13 @@ const Login: React.FC = () => {
               LOGIN
             </IonButton>
 
+            <IonButton fill="clear" className="forgot-password-btn" onClick={() => setShowPasswordResetModal(true)}>
+              Forgot Password?
+            </IonButton>
 
             <p className="register-link">
               Don't have an account?  <br />
-              <IonButton fill="clear" className="register-btn" onClick={() => navigation.push('/it35b-lab/register')}>
+              <IonButton fill="clear" className="register-btn" onClick={() => navigation.push('/ias/register')}>
                 Sign up
               </IonButton>
             </p>

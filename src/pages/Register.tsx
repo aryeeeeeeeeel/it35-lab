@@ -139,7 +139,7 @@ const Register: React.FC = () => {
       }
 
       setSuccessMessage('Check your email to verify!');
-      setTimeout(() => navigation.push('/it35b-lab/'), 2000);
+      setTimeout(() => navigation.push('/ias/'), 2000);
     } catch (err) {
       console.error('Unexpected Error:', err);
       setErrorMessage('Something went wrong.');
@@ -210,7 +210,7 @@ const Register: React.FC = () => {
 
             <p className="login-link">
               Already have an account? <br />
-              <IonButton fill="clear" className="login-btn" onClick={() => navigation.push('/it35b-lab/')}>
+              <IonButton fill="clear" className="login-btn" onClick={() => navigation.push('/ias/')}>
                 LOGIN
               </IonButton>
             </p>

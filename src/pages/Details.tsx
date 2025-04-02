@@ -15,7 +15,7 @@ import {
         <IonHeader>
           <IonToolbar color="primary">
             <IonButtons slot='start'>
-                <IonBackButton defaultHref='/it35b-lab/app/home'></IonBackButton>
+                <IonBackButton defaultHref='/ias/app/home'></IonBackButton>
             </IonButtons>
             <IonTitle>Home Details</IonTitle>
           </IonToolbar>

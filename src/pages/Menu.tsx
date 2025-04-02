@@ -24,8 +24,8 @@ import Details from './Details';
 
 const Menu: React.FC = () => {
     const path = [
-        { name: 'Home', url: '/it35b-lab/app/home', icon: homeOutline },
-        { name: 'About', url: '/it35b-lab/app/about', icon: rocketOutline },
+        { name: 'Home', url: '/ias/app/home', icon: homeOutline },
+        { name: 'About', url: '/ias/app/about', icon: rocketOutline },
     ]
 
     const navigation = useIonRouter();
@@ -34,7 +34,7 @@ const Menu: React.FC = () => {
         await supabase.auth.signOut();
         sessionStorage.removeItem('email');
         sessionStorage.removeItem('password');
-        navigation.push('/it35b-lab');
+        navigation.push('/ias');
     };
     
 
@@ -69,11 +69,11 @@ const Menu: React.FC = () => {
                 </IonMenu>
 
                 <IonRouterOutlet id="main">
-                    <Route exact path="/it35b-lab/app/home" component={Home} />
-                    <Route exact path="/it35b-lab/app/home/details" component={Details} />
-                    <Route exact path="/it35b-lab/app/about" component={About} />
-                    <Route exact path="/it35b-lab/app">
-                        <Redirect to="/it35b-lab/app/home" />
+                    <Route exact path="/ias/app/home" component={Home} />
+                    <Route exact path="/ias/app/home/details" component={Details} />
+                    <Route exact path="/ias/app/about" component={About} />
+                    <Route exact path="/ias/app">
+                        <Redirect to="/ias/app/home" />
                     </Route>
                 </IonRouterOutlet>
             </IonSplitPane>
