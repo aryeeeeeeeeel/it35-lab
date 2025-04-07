@@ -15,10 +15,15 @@ import {
 } from '@ionic/react';
 import { eye, eyeOff } from 'ionicons/icons';
 import { useState } from 'react';
+import { supabase } from '../utils/supabaseClient';
+import bcrypt from 'bcryptjs';
 
 const Register: React.FC = () => {
   const navigation = useIonRouter();
   const [username, setUsername] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -28,7 +33,26 @@ const Register: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const doRegister = () => {
+  const validatePassword = (password: string): string | null => {
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters long.';
+    }
+    if (!/[A-Z]/.test(password)) {
+      return 'Password must include an uppercase letter.';
+    }
+    if (!/[a-z]/.test(password)) {
+      return 'Password must include a lowercase letter.';
+    }
+    if (!/[0-9]/.test(password)) {
+      return 'Password must include a number.';
+    }
+    if (!/[!@#$%^&*_]/.test(password)) {
+      return 'Password must include a special character (!@#$%^&*_).';
+    }
+    return null;
+  };
+
+  const doRegister = async () => {
     if (username.trim() === '') {
       setErrorMessage('Username cannot be empty.');
       return;
@@ -43,57 +67,62 @@ const Register: React.FC = () => {
       return;
     }
 
-    const validatePassword = (password: string) => {
-      const minLength = 8;
-      const hasUpperCase = /[A-Z]/.test(password);
-      const hasLowerCase = /[a-z]/.test(password);
-      const hasNumber = /[0-9]/.test(password);
-      const hasSpecialChar = /[!@#$%^&*()_,.?":{}|<>]/.test(password);
-
-      if (password.trim() === '') {
-        return 'Password cannot be empty.';
-      }
-      if (password.length < minLength) {
-        return 'Password must be at least 8 characters long.';
-      }
-      if (!hasUpperCase) {
-        return 'Password must contain at least one uppercase letter.';
-      }
-      if (!hasLowerCase) {
-        return 'Password must contain at least one lowercase letter.';
-      }
-      if (!hasNumber) {
-        return 'Password must contain at least one number.';
-      }
-      if (!hasSpecialChar) {
-        return 'Password must contain at least one special character.';
-      }
-      return '';
-    };
-    if (password.trim() === '') {
-      setErrorMessage('Password is required.');
-      return;
-    }
     const passwordError = validatePassword(password);
     if (passwordError) {
       setErrorMessage(passwordError);
       return;
     }
+
     if (password !== confirmPassword) {
       setErrorMessage('Passwords do not match!');
       return;
     }
 
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setSuccessMessage('Registration successful!');
+
+    try {
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const { data: signUpData, error: authError } = await supabase.auth.signUp({
+        email: email.trim(),
+        password: password,
+      });
+
+      if (authError) {
+        setErrorMessage(authError.message);
+        return;
+      }
+
+      const user = signUpData?.user;
+
+      const { data, error } = await supabase
+        .from('users')
+        .insert([
+          {
+            username,
+            user_email: email,
+            user_firstname: firstName,
+            user_lastname: lastName,
+            user_avatar_url: avatarUrl,
+            user_password: hashedPassword,
+          },
+        ]);
+
+      if (error) {
+        setErrorMessage(error.message);
+        return;
+      }
+
+      setSuccessMessage('Registration successful! Please verify your email.');
       setTimeout(() => {
         setSuccessMessage('');
         navigation.push('/it35-lab/', 'root', 'replace');
       }, 1500);
-
-    }, 1500);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Registration failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -109,41 +138,82 @@ const Register: React.FC = () => {
             <h2>Create an Account</h2>
             <p>Fill in the details below</p>
 
-            <IonItem className="input-field">
-              <IonLabel position="stacked">Username</IonLabel>
-              <IonInput value={username} onIonInput={(e) => setUsername(e.detail.value!)} placeholder="Enter your username" />
-            </IonItem>
+            <IonInput
+              label="Username"
+              labelPlacement="floating"
+              fill="outline"
+              value={username}
+              onIonInput={(e) => setUsername(e.detail.value!)}
+              className="input-field"
+            />
+            <IonInput
+              label="First Name"
+              labelPlacement="floating"
+              fill="outline"
+              value={firstName}
+              onIonInput={(e) => setFirstName(e.detail.value!)}
+              className="input-field"
+            />
 
-            <IonItem className="input-field">
-              <IonLabel position="stacked">Email</IonLabel>
-              <IonInput type="email" value={email} onIonInput={(e) => setEmail(e.detail.value!)} placeholder="Enter your email" />
-            </IonItem>
+            <IonInput
+              label="Last Name"
+              labelPlacement="floating"
+              fill="outline"
+              value={lastName}
+              onIonInput={(e) => setLastName(e.detail.value!)}
+              className="input-field"
+            />
 
-            <IonItem className="input-field">
-              <IonLabel position="stacked">Password</IonLabel>
+            <IonInput
+              label="Avatar URL"
+              labelPlacement="floating"
+              fill="outline"
+              value={avatarUrl}
+              onIonInput={(e) => setAvatarUrl(e.detail.value!)}
+              className="input-field"
+            />
+
+            <IonInput
+              label="Email"
+              labelPlacement="floating"
+              fill="outline"
+              type="email"
+              value={email}
+              onIonInput={(e) => setEmail(e.detail.value!)}
+              className="input-field"
+            />
+
+            <div className="input-field password-field">
               <IonInput
+                label="Password"
+                labelPlacement="floating"
+                fill="outline"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onIonInput={(e) => setPassword(e.detail.value!)}
-                placeholder="Enter your password"
               />
-              <IonButton fill="clear" slot="end" className="eye-button" onClick={() => setShowPassword(!showPassword)}>
-                <IonIcon icon={showPassword ? eyeOff : eye} />
-              </IonButton>
-            </IonItem>
+              <IonIcon
+                icon={showPassword ? eyeOff : eye}
+                className="eye-icon"
+                onClick={() => setShowPassword(!showPassword)}
+              />
+            </div>
 
-            <IonItem className="input-field">
-              <IonLabel position="stacked">Confirm Password</IonLabel>
+            <div className="input-field password-field">
               <IonInput
+                label="Confirm Password"
+                labelPlacement="floating"
+                fill="outline"
                 type={showConfirmPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onIonInput={(e) => setConfirmPassword(e.detail.value!)}
-                placeholder="Confirm your password"
               />
-              <IonButton fill="clear" slot="end" className="eye-button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-                <IonIcon icon={showConfirmPassword ? eyeOff : eye} />
-              </IonButton>
-            </IonItem>
+              <IonIcon
+                icon={showConfirmPassword ? eyeOff : eye}
+                className="eye-icon"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              />
+            </div>
 
             <IonButton expand="full" className="register-btn" onClick={doRegister}>
               REGISTER
@@ -191,6 +261,22 @@ const Register: React.FC = () => {
 
           .eye-button {
             height: 100%;
+          }
+
+          .password-field {
+            position: relative;
+          }
+
+          .eye-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            font-size: 24px;
+            color: skyblue;
+            cursor: pointer;
+            padding: 6px;
           }
         `}
       </style>

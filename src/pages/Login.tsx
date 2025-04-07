@@ -15,6 +15,8 @@ import {
 } from '@ionic/react';
 import { eye, eyeOff } from 'ionicons/icons';
 import { useState } from 'react';
+import { supabase } from '../utils/supabaseClient';
+import bcrypt from 'bcryptjs';
 
 const Login: React.FC = () => {
   const navigation = useIonRouter();
@@ -24,16 +26,44 @@ const Login: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const doLogin = () => {
+  const doLogin = async () => {
     if (email.trim() === '' || password.trim() === '') {
       setShowToast(true);
       return;
     }
+
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    setShowToast(false);
+
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('user_email', email.trim())
+        .single();
+
+      if (error || !data) {
+        setShowToast(true);
+        return;
+      }
+
+      const isValidPassword = await bcrypt.compare(password.trim(), data.user_password);
+      if (!isValidPassword) {
+        setShowToast(true);
+        return;
+      }
+
+      // Save session
+      sessionStorage.setItem('user_id', data.user_id);
+      sessionStorage.setItem('username', data.username);
+
+      // Navigate
       navigation.push('/it35-lab/app', 'forward', 'replace');
-    }, 1500);
+    } catch (err) {
+      setShowToast(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -49,39 +79,61 @@ const Login: React.FC = () => {
             <h2>Welcome</h2>
             <p>Please login to continue</p>
 
-            <IonItem className="input-field">
-              <IonLabel position="stacked">Email</IonLabel>
-              <IonInput type="text" value={email} onIonInput={(e) => setEmail(e.detail.value!)} placeholder="Enter your email" />
-            </IonItem>
+            {/* Email Input */}
+            <IonInput
+              label="Email"
+              labelPlacement="floating"
+              fill="outline"
+              type="email"
+              value={email}
+              onIonInput={(e) => setEmail(e.detail.value!)}
+              className="input-field"
+            />
 
-            <IonItem className="input-field">
-              <IonLabel position="stacked">Password</IonLabel>
+            {/* Password Input with Eye Icon */}
+            <div className="input-field password-field">
               <IonInput
+                label="Password"
+                labelPlacement="floating"
+                fill="outline"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onIonInput={(e) => setPassword(e.detail.value!)}
-                placeholder="Enter your password"
+                className="password-input"
               />
-              <IonButton fill="clear" slot="end" className="eye-button" onClick={() => setShowPassword(!showPassword)}>
-                <IonIcon icon={showPassword ? eyeOff : eye} />
-              </IonButton>
-            </IonItem>
+              <IonIcon
+                icon={showPassword ? eyeOff : eye}
+                className="eye-icon"
+                onClick={() => setShowPassword(!showPassword)}
+              />
+            </div>
 
             <IonButton expand="full" className="login-btn" onClick={doLogin}>
               LOGIN
             </IonButton>
 
             <p className="register-link">
-              Don't have an account?  <br />
-              <IonButton fill="clear" className="register-btn" onClick={() => navigation.push('/it35-lab/register')}>
+              Don&apos;t have an account? <br />
+              <IonButton
+                fill="clear"
+                className="register-btn"
+                onClick={() => navigation.push('/it35-lab/register')}
+              >
                 Sign up
               </IonButton>
             </p>
           </div>
         </div>
 
-        <IonToast isOpen={showToast} message="Invalid username or password!" color="danger" duration={2000} position="top" onDidDismiss={() => setShowToast(false)} />
-        <IonLoading isOpen={loading} message="Logging in..." duration={1500} />
+        <IonToast
+          isOpen={showToast}
+          message="Invalid username or password!"
+          color="danger"
+          duration={2000}
+          position="top"
+          onDidDismiss={() => setShowToast(false)}
+        />
+        <IonLoading isOpen={loading} message="Logging in..." />
       </IonContent>
 
       <style>
@@ -102,15 +154,21 @@ const Login: React.FC = () => {
 
           .input-field {
             margin-bottom: 15px;
-            border-radius: 10px;
           }
 
-          .input-field ion-input {
-            --padding-start: 12px; 
+          .password-field {
+            position: relative;
           }
 
-          .eye-button {
-            height: 100%;
+          .password-input {
+            --padding-start: 12px;
+          }
+
+          .eye-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
           }
 
           .register-btn {
@@ -122,6 +180,10 @@ const Login: React.FC = () => {
           .register-link {
             text-align: center;
             margin-top: 10px;
+          }
+
+          .login-btn {
+            margin-top: 15px;
           }
         `}
       </style>
