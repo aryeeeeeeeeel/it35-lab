@@ -90,7 +90,7 @@ const Register: React.FC = () => {
       setSuccessMessage('Registration successful!');
       setTimeout(() => {
         setSuccessMessage('');
-        navigation.push('/it35b-lab/', 'root', 'replace');
+        navigation.push('/it35-lab/', 'root', 'replace');
       }, 1500);
 
     }, 1500);
@@ -151,7 +151,7 @@ const Register: React.FC = () => {
 
             <p className="login-link">
               Already have an account? <br />
-              <IonButton fill="clear" className="login-btn" onClick={() => navigation.push('/it35b-lab/')}>
+              <IonButton fill="clear" className="login-btn" onClick={() => navigation.push('/it35-lab/')}>
                 LOGIN
               </IonButton>
             </p>

@@ -32,7 +32,7 @@ const Login: React.FC = () => {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      navigation.push('/it35b-lab/app', 'forward', 'replace');
+      navigation.push('/it35-lab/app', 'forward', 'replace');
     }, 1500);
   };
 
@@ -73,7 +73,7 @@ const Login: React.FC = () => {
 
             <p className="register-link">
               Don't have an account?  <br />
-              <IonButton fill="clear" className="register-btn" onClick={() => navigation.push('/it35b-lab/register')}>
+              <IonButton fill="clear" className="register-btn" onClick={() => navigation.push('/it35-lab/register')}>
                 Sign up
               </IonButton>
             </p>
