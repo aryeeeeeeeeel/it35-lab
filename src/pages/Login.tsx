@@ -18,14 +18,14 @@ import { useState } from 'react';
 
 const Login: React.FC = () => {
   const navigation = useIonRouter();
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const doLogin = () => {
-    if (username.trim() === '' || password.trim() === '') {
+    if (email.trim() === '' || password.trim() === '') {
       setShowToast(true);
       return;
     }
@@ -50,8 +50,8 @@ const Login: React.FC = () => {
             <p>Please login to continue</p>
 
             <IonItem className="input-field">
-              <IonLabel position="stacked">Username</IonLabel>
-              <IonInput type="text" value={username} onIonInput={(e) => setUsername(e.detail.value!)} placeholder="Enter your username" />
+              <IonLabel position="stacked">Email</IonLabel>
+              <IonInput type="text" value={email} onIonInput={(e) => setEmail(e.detail.value!)} placeholder="Enter your email" />
             </IonItem>
 
             <IonItem className="input-field">
