@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { IonApp, IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonInput, IonLabel, IonModal, IonFooter, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonAlert, IonText, IonAvatar, IonCol, IonGrid, IonRow } from '@ionic/react';
+import { IonApp, IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonInput, IonLabel, IonModal, IonFooter, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonAlert, IonText, IonAvatar, IonCol, IonGrid, IonRow, IonIcon, IonPopover } from '@ionic/react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../utils/supabaseClient';
+import { colorFill, pencil, trash } from 'ionicons/icons';
 
 interface Post {
     post_id: string;
@@ -21,6 +22,7 @@ const FeedContainer = () => {
     const [username, setUsername] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
+    const [popoverState, setPopoverState] = useState<{ open: boolean; event: Event | null; postId: string | null }>({ open: false, event: null, postId: null });
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -142,17 +144,37 @@ const FeedContainer = () => {
                                                 <IonCardTitle style={{ marginTop: '10px' }}>{post.username}</IonCardTitle>
                                                 <IonCardSubtitle>{new Date(post.post_created_at).toLocaleString()}</IonCardSubtitle>
                                             </IonCol>
+                                            <IonCol size="auto">
+                                                {/* Pencil icon triggers popover */}
+                                                <IonButton
+                                                    fill="clear"
+                                                    onClick={(e) => setPopoverState({ open: true, event: e.nativeEvent, postId: post.post_id })}
+                                                >
+                                                    <IonIcon color="secondary" icon={pencil} />
+                                                </IonButton>
+                                            </IonCol>
                                         </IonRow>
                                     </IonCardHeader>
+
                                     <IonCardContent>
-                                        <IonText color="secondary">
+                                        <IonText style={{ color: 'black' }}>
                                             <h1>{post.post_content}</h1>
                                         </IonText>
                                     </IonCardContent>
-                                    <IonFooter>
-                                        <IonButton fill="clear" onClick={() => startEditingPost(post)}>Edit</IonButton>
-                                        <IonButton fill="clear" color="danger" onClick={() => deletePost(post.post_id)}>Delete</IonButton>
-                                    </IonFooter>
+
+                                    {/* Popover with Edit and Delete options */}
+                                    <IonPopover
+                                        isOpen={popoverState.open && popoverState.postId === post.post_id}
+                                        event={popoverState.event}
+                                        onDidDismiss={() => setPopoverState({ open: false, event: null, postId: null })}
+                                    >
+                                        <IonButton fill="clear" onClick={() => { startEditingPost(post); setPopoverState({ open: false, event: null, postId: null }); }}>
+                                            Edit
+                                        </IonButton>
+                                        <IonButton fill="clear" color="danger" onClick={() => { deletePost(post.post_id); setPopoverState({ open: false, event: null, postId: null }); }}>
+                                            Delete
+                                        </IonButton>
+                                    </IonPopover>
                                 </IonCard>
                             ))}
                         </>
