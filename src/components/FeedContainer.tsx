@@ -123,8 +123,10 @@ const FeedContainer = () => {
                                 </IonCardHeader>
                                 <IonCardContent>
                                     <IonInput value={postContent} onIonChange={e => setPostContent(e.detail.value!)} placeholder="Write a post..." />
-                                    <IonButton onClick={createPost}>Post</IonButton>
                                 </IonCardContent>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0.5rem' }}>
+                                    <IonButton onClick={createPost}>Post</IonButton>
+                                </div>
                             </IonCard>
 
                             {posts.map(post => (
