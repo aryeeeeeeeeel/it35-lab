@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { IonApp, IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonInput, IonLabel, IonModal, IonFooter, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonAlert, IonText } from '@ionic/react';
+import { IonApp, IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonInput, IonLabel, IonModal, IonFooter, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonAlert, IonText, IonAvatar, IonCol, IonGrid, IonRow } from '@ionic/react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../utils/supabaseClient';
 
@@ -104,8 +104,20 @@ const FeedContainer = () => {
                             {posts.map(post => (
                                 <IonCard key={post.post_id}>
                                     <IonCardHeader>
-                                        <IonCardTitle>{post.username}</IonCardTitle>
-                                        <IonCardSubtitle>{new Date(post.post_created_at).toLocaleString()}</IonCardSubtitle>
+                                        <IonRow>
+                                            <IonCol size="1.85">
+                                                <IonAvatar>
+                                                    <img alt="Silhouette of a person's head" src="https://ionicframework.com/docs/img/demos/avatar.svg" />
+                                                </IonAvatar>
+                                            </IonCol>
+                                            <IonCol>
+                                                <IonCardTitle
+                                                    style={{
+                                                        marginTop: '10px'
+                                                    }}>{post.username}</IonCardTitle>
+                                                <IonCardSubtitle>{new Date(post.post_created_at).toLocaleString()}</IonCardSubtitle>
+                                            </IonCol>
+                                        </IonRow>
                                     </IonCardHeader>
                                     <IonCardContent>
                                         <IonText color="secondary">
