@@ -169,6 +169,11 @@ const Login: React.FC = () => {
             right: 10px;
             top: 50%;
             transform: translateY(-50%);
+            z-index: 10;
+            font-size: 24px;
+            color: skyblue;
+            cursor: pointer;
+            padding: 6px;
           }
 
           .register-btn {
